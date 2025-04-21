@@ -8,3 +8,6 @@ wos_filters.sim/
 wos_filters.runs/
 wos_filters.ip_user_files/
 .vscode/
+tests/sim_build/
+tests/results.xml
+__pycache__/
