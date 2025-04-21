@@ -17,10 +17,10 @@ class RankUpdateUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
     })
 
     val Df = io.df.zipWithIndex.foldLeft(0.S(b.W)) { case (sum, (df_i, i)) =>
-        sum + Mux(io.s(K-1-i) === 1.U, df_i, 0.S)
+        sum + Mux(io.s(i) === 1.U, df_i, 0.S)
     }
     // io.s(0) is the LSB of s, it should contain v, the comparison with xold
-    io.r_new := ((io.r_old + Mux(io.u === 1.U, io.fp0, 0.U) - Mux(io.s(0) === 1.U, io.fpkm1, 0.U)).asSInt + Df).asUInt
+    io.r_new := ((io.r_old + Mux(io.u === 1.U, io.fp0, 0.U) - Mux(io.s(K-1) === 1.U, io.fpkm1, 0.U)).asSInt + Df).asUInt
 }
 
 class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Array[Int]) extends Module {
@@ -51,14 +51,8 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: A
     r := 1.U + acc
 
     // Step 2.3 : Update comparison with other samples
-    // for (j <- 0 until K-1) {  
-    //     // loads !u(P(j)) into s[j-1] for 1 <= j <= K-1 but the order of the bits of s is reversed and u is offset by 1
-    //     s(K - 1 - j) := !io.u(j)
-    // }
-    val s_new = (0 until K-1).foldLeft(0.U(K.W)) { (acc, j) =>
-        acc | (!io.u(j) << (K - 1 - j))
-    }
-    s := s_new
+    val s_new = VecInit((0 until K-1).map(j => !io.u(j)))
+    s := s_new.asUInt
 
     // step 3 : match rank
     val rmr = Wire(SInt((c+1).W))
@@ -104,25 +98,16 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     val ruu = Module(new RankUpdateUnit(b, c, mr, K))
 
     // Setup weights
-    // val diffs = Array.fill(K-1)(0.S((c+1).W))
-    // for (i <- 0 until K-1) { // until does not include the last element
-    //     diffs(i) := weights(i+1).S((c+1).W) - weights(i).S((c+1).W)
-    // }
-    // val df = RegInit(VecInit(diffs)) // the difference in weights of adjacent samples 
-
     val diffs = Array.fill(K-1)(0.S((c+1).W)) // Use Array for mutability
     for (i <- 0 until K-1) { // until does not include the last element
         diffs(i) = weights(i+1).S((c+1).W) - weights(i).S((c+1).W)
         // printf(p"diffs($i): ${diffs(i)}\n")
     }
     val df = RegInit(VecInit(diffs)) // Convert the mutable Array to a Vec
-    // printf("bll_outputs: %b\n", bll_outputs)
 
     val f = RegInit(weights(id).U(c.W)) // the weight of the sample, constant 
     val fp0 = RegInit(weights(0).U(c.W)) // weight of sample at P(0), constant
-    // printf(p"fp0: ${fp0}\n")
     val fpkm1 = RegInit(weights(K-1).U(c.W)) // weight of sample at P(K-1), constant
-    // printf(p"fpkm1: ${fpkm1}\n")
 
 
     // step 1 : compare with new sample
@@ -131,7 +116,6 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     io.u := u // to send it immediately to P(0)
 
     // step 2.1 : update rank
-
     ruu.io.s := io.s_in
     ruu.io.u := u // freshly computed
 
@@ -145,7 +129,8 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     r := ruu.io.r_new
 
     // step 2.3 : update comparison with other samples
-    s := Cat(u, io.s_in(K-1, 1)) // we discard the lsb shift everything and add the new sample to the msb
+    // s := Cat(u, io.s_in(K-1, 1)) // we discard the lsb shift everything and add the new sample to the msb
+    s := Cat(io.s_in(K-2, 0), u) // discard msb and shift everything to the right
 
     // sending state to the next processor (at next clock cycle)
 

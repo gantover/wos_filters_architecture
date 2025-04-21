@@ -7,7 +7,7 @@ import chiseltest._
 class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     "RankUpdateUnitPos" should "pass" in {
         test(new RankUpdateUnit(4, 4, 4, 3)) { c =>
-            c.io.s.poke("b110".U) // we have 0 at the MSB so v should be 0
+            c.io.s.poke("b011".U) // 
             c.io.u.poke(1.U)
             c.io.df(0).poke(1.S) // that's for P(1) - P(0)
             c.io.df(1).poke(2.S) // that's for P(2) - P(1)
@@ -20,7 +20,7 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     }
     "RankUpdateUnitNeg" should "pass" in {
         test(new RankUpdateUnit(4, 4, 4, 3)) { c =>
-            c.io.s.poke("b110".U) // we have 0 at the MSB so v should be 0
+            c.io.s.poke("b011".U) // we have 0 at the MSB so v should be 0
             c.io.u.poke(1.U)
             c.io.df(0).poke(-1.S) // that's for P(1) - P(0)
             c.io.df(1).poke(-2.S) // that's for P(2) - P(1)
@@ -33,7 +33,7 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     }
     "RankUpdateUnitGen" should "pass" in {
         test(new RankUpdateUnit(4, 4, 4, 3)) { c =>
-            c.io.s.poke("b100".U) // we have 0 at the MSB so v should be 0
+            c.io.s.poke("b001".U) // we have 0 at the MSB so v should be 0
             c.io.u.poke(0.U)
             c.io.df(0).poke(1.S) // that's for P(1) - P(0)
             c.io.df(1).poke(1.S) // that's for P(2) - P(1)
@@ -53,7 +53,7 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
             c.clock.step()
 
             c.io.r.expect(6.U)
-            c.io.s.expect("b110".U)
+            c.io.s.expect("b011".U)
             c.io.a.expect(1.U)
 
             c.io.x_new.poke(1.U)
@@ -74,7 +74,7 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
             c.io.x_new.poke(1.U)
             c.io.a_in.poke(1.U)
             c.io.r_in.poke(1.U)
-            c.io.s_in.poke("b110".U)
+            c.io.s_in.poke("b011".U)
 
             c.io.a_out.expect(0.U)
             c.io.u.expect(0.U) // u = 1 if a >= x_new
@@ -83,7 +83,7 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
 
             c.io.a_out.expect(1.U)
             c.io.r_out.expect(3.U)
-            c.io.s_out.expect("b011".U)
+            c.io.s_out.expect("b110".U)
 
             c.clock.step()
 
