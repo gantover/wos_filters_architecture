@@ -15,19 +15,6 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.io.out.expect("b1111111".U)
         }
     }
-    // "ShiftReg" should "pass" in {
-    //     test(new ShiftRegister(8, 3)) { c => 
-    //         c.io.in.poke("b11111111".U)
-    //         c.clock.step()
-    //         c.io.transfer.expect("b11111111".U)
-    //         c.io.in.poke("b11111111".U)
-    //         c.clock.step()
-    //         c.io.in.poke("b11111111".U)
-    //         // the input of reg 2 to 3 is ready but we need a last clock cycle to transfer the value
-    //         c.clock.step()
-    //         c.io.out.expect("b111111111111111111111111".U)
-    //     }
-    // }
     "Regs" should "pass" in {
         test(new Regs(3)) { c => 
             c.io.in.poke(1.U)
