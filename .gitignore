@@ -1,3 +1,10 @@
 target
 test_run_dir
 project
+.metals/
+wos_filters.cache/
+wos_filters.hw/
+wos_filters.sim/
+wos_filters.runs/
+wos_filters.ip_user_files/
+.vscode/

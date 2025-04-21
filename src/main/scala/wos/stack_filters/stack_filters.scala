@@ -55,9 +55,9 @@ class BLL(val weights : Array[Int], val rank : Int, val width : Int) extends Mod
     //     acc := acc + Mux(io.regs_in(i) === 1.U, weights(i).U(width.W), 0.U(width.W))
     // }
     acc := weights.zipWithIndex.foldLeft(0.U(width.W)) { case (sum, (weight, i)) =>
-        sum + Mux(io.regs_in(i) === 1.U, weight.U(width.W), 0.U(width.W))
+        sum + Mux(io.regs_in(depth-1-i) === 0.U, weight.U(width.W), 0.U(width.W))
     }
-    io.out := (acc >= rank.U).asUInt
+    io.out := (acc < rank.U).asUInt
 }
 
 class ThresholdRecomposition(width: Int) extends Module {
@@ -96,13 +96,45 @@ class StackFiltersUnit(val weights : Array[Int], val rank : Int, val width : Int
         bll_array(i).io.regs_in := regs_array(i).io.out
     }
     val bll_outputs = Cat(bll_array.map(_.io.out).reverse)
-    for (i <- 0 until exp_dim) {
-        printf(p"regs_array($i).io.in: ${regs_array(i).io.in}\n")
-        printf(p"regs_array($i).io.out: ${regs_array(i).io.out}\n")
-        printf(p"bll_array($i).io.regs_in: ${bll_array(i).io.regs_in}\n")
-        printf(p"bll_array($i).io.out: ${bll_array(i).io.out}\n")
-    }
+    // for (i <- 0 until exp_dim) {
+    //     printf(p"regs_array($i).io.in: ${regs_array(i).io.in}\n")
+    //     printf(p"regs_array($i).io.out: ${regs_array(i).io.out}\n")
+    //     printf(p"bll_array($i).io.regs_in: ${bll_array(i).io.regs_in}\n")
+    //     printf(p"bll_array($i).io.out: ${bll_array(i).io.out}\n")
+    // }
     // printf("bll_outputs: %b\n", bll_outputs)
     tru.io.in := bll_outputs
     io.y := tru.io.out
+}
+
+class StackFiltersContainer(val weights : Array[Int], val rank : Int, val width : Int) extends Module {
+    // Acts as a buffer for input and output so that we can impose a clock constraint for speed measurement
+    val io = IO(new Bundle {
+        val x = Input(UInt(width.W))
+        val y = Output(UInt(width.W))
+    })
+    val stack_filters_unit = Module(new StackFiltersUnit(weights, rank, width))
+
+    val regx = RegInit(0.U(width.W))
+    val regy = RegInit(0.U(width.W))
+
+    regx := io.x
+    io.y := regy
+
+    stack_filters_unit.io.x := regx 
+    regy := stack_filters_unit.io.y
+}
+
+object StackFiltersUnit extends App {
+    val weights = Array(1, 2, 3) 
+    val rank = 4
+    val width = 3 
+    emitVerilog(new StackFiltersUnit(weights, rank, width), Array("--target-dir", "generated"))
+}
+
+object StackFiltersContainer extends App {
+    val weights = Array(1, 2, 3) 
+    val rank = 4
+    val width = 3 
+    emitVerilog(new StackFiltersContainer(weights, rank, width), Array("--target-dir", "generated"))
 }

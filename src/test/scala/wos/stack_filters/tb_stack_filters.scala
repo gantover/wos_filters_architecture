@@ -42,12 +42,17 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
     }
     "BLL" should "pass" in {
         test(new BLL(Array(1, 2, 3), 4, 4)) { c => 
-            // 1,2,3 with the 4th rank, and bit width of 4 for the weights
+            // We give (1, 2, 3) as weights and 4 as rank
+            // We follow the convention that the first weight in the array goes to the MSB of the reg
+            // the MSB is the lattest bit added to the shift register, on the left
             c.io.regs_in.poke("b110".U)
-            // 101 means 3 + 2 + 0 = 5 so we should have 1 at the output
+            // 110 means 0 + 0 + 3 = 3 < R=4 so we should have 1 at the output
             c.io.out.expect(1.U)
             c.io.regs_in.poke("b011".U)
-            // 101 means 0 + 2 + 1 = 3 so we should have 0 at the output
+            // 011 means 1 + 0 + 0 < R=4 so we should have 1 at the output
+            c.io.out.expect(1.U)
+            c.io.regs_in.poke("b010".U)
+            // 101 means 1 + 0 + 3 >= R=4 so we should have 0 at the output
             c.io.out.expect(0.U)
         }
     }
@@ -73,16 +78,20 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.clock.step()
             c.io.x.poke(2.U)
             c.clock.step()
-            println("StackFiltersUnit Output " + c.io.y.peek().litValue)
+
+            c.io.y.expect(2.U)
+
             c.io.x.poke(3.U)
             c.clock.step()
-            println("StackFiltersUnit Output " + c.io.y.peek().litValue)
+            c.io.y.expect(3.U)
+
             c.io.x.poke(5.U)
             c.clock.step()
-            println("StackFiltersUnit Output " + c.io.y.peek().litValue)
+            c.io.y.expect(3.U)
+
             c.io.x.poke(5.U)
             c.clock.step()
-            println("StackFiltersUnit Output " + c.io.y.peek().litValue)
+            c.io.y.expect(5.U)
         }
     }
 
