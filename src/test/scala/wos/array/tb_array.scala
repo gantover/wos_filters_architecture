@@ -45,9 +45,12 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "Processor0" should "pass" in {
-        test(new Processor0(4, 4, 4, 3, Array(1, 2, 3))) { c =>
+        test(new Processor0(4, 4, 4, 3)) { c =>
             c.io.x_new.poke(1.U)
             c.io.R.poke(2.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(3.U)
             c.io.u.poke("b00".U) 
 
             c.clock.step()
@@ -68,8 +71,14 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     }
     "Processor0_1" should "pass" in {
         // test(new ArrayUnit(4, 4, 4, 6, Array(2, 2, 4, 3, 3, 3))) { c =>
-        test(new Processor0(4, 4, 4, 6, Array(2, 2, 4, 3, 3, 3))) { c =>
+        test(new Processor0(4, 4, 4, 6)) { c =>
             c.io.R.poke(7.U)
+            c.io.weights(0).poke(2.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(4.U)
+            c.io.weights(3).poke(3.U)
+            c.io.weights(4).poke(3.U)
+            c.io.weights(5).poke(3.U)
             c.io.x_new.poke(1.U)
             c.io.u.poke("b11111".U)
 
@@ -82,8 +91,13 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     }
 
     "Processor" should "pass" in {
-        test(new Processor(4, 4, 4, 3, Array(1, 2, 3), 1)) { c =>
+        test(new Processor(4, 4, 4, 3, 1)) { c =>
             c.io.R.poke(2.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(3.U)
+
+            c.clock.step()
 
             c.io.x_new.poke(1.U)
             c.io.a_in.poke(1.U)
@@ -106,8 +120,16 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
     }
 
     "Processor_2" should "pass" in {
-        test(new Processor(4, 4, 4, 6, Array(2, 2, 4, 3, 3, 3), 2)) { c =>
+        test(new Processor(4, 4, 4, 6, 2)) { c =>
             c.io.R.poke(7.U)
+            c.io.weights(0).poke(2.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(4.U)
+            c.io.weights(3).poke(3.U)
+            c.io.weights(4).poke(3.U)
+            c.io.weights(5).poke(3.U)
+
+            c.clock.step()
 
             c.io.x_new.poke(1.U)
             c.io.a_in.poke(3.U)
@@ -124,9 +146,12 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "ArrayUnit1" should "pass" in {
-        test(new ArrayUnit(8, 8, 8, 3, Array(1, 1, 3))) { c =>
+        test(new ArrayUnit(8, 8, 8, 3)) { c =>
             // c.io.R.poke(2.U)
             c.io.R.poke(4.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(1.U)
+            c.io.weights(2).poke(3.U)
 
             c.io.x.poke(1.U)
             c.clock.step()
@@ -141,9 +166,12 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "ArrayUnit2" should "pass" in {
-        test(new ArrayUnit(8, 8, 8, 3, Array(1, 1, 3))) { c =>
+        test(new ArrayUnit(8, 8, 8, 3)) { c =>
             // c.io.R.poke(2.U)
             c.io.R.poke(4.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(1.U)
+            c.io.weights(2).poke(3.U)
 
             c.io.x.poke(3.U)
             c.clock.step()
@@ -166,9 +194,12 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "ArrayUnit3" should "pass" in {
-        test(new ArrayUnit(8, 8, 8, 3, Array(3, 2, 1))) { c =>
+        test(new ArrayUnit(8, 8, 8, 3)) { c =>
             // c.io.R.poke(2.U)
             c.io.R.poke(3.U)
+            c.io.weights(0).poke(3.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(1.U)
 
             c.io.x.poke(1.U)
             c.clock.step()
@@ -181,9 +212,12 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "ArrayUnit4" should "pass" in {
-        test(new ArrayUnit(8, 8, 8, 3, Array(1, 2, 3))) { c =>
+        test(new ArrayUnit(8, 8, 8, 3)) { c =>
             // c.io.R.poke(2.U)
             c.io.R.poke(4.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(3.U)
 
             c.io.x.poke(1.U)
             c.clock.step()
