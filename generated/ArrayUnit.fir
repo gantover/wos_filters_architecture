@@ -47,10 +47,10 @@ circuit ArrayUnit :
     inst ruu of RankUpdateUnit @[array.scala 103:21]
     ruu.clock <= clock
     ruu.reset <= reset
-    node _T = sub(asSInt(UInt<5>("h2")), asSInt(UInt<5>("h1"))) @[array.scala 108:44]
+    node _T = sub(asSInt(UInt<5>("h4")), asSInt(UInt<5>("h4"))) @[array.scala 108:44]
     node _T_1 = tail(_T, 1) @[array.scala 108:44]
     node _T_2 = asSInt(_T_1) @[array.scala 108:44]
-    node _T_3 = sub(asSInt(UInt<5>("h3")), asSInt(UInt<5>("h2"))) @[array.scala 108:44]
+    node _T_3 = sub(asSInt(UInt<5>("h2")), asSInt(UInt<5>("h4"))) @[array.scala 108:44]
     node _T_4 = tail(_T_3, 1) @[array.scala 108:44]
     node _T_5 = asSInt(_T_4) @[array.scala 108:44]
     wire _df_WIRE : SInt<5>[2] @[array.scala 111:29]
@@ -59,11 +59,11 @@ circuit ArrayUnit :
     reg df : SInt<5>[2], clock with :
       reset => (reset, _df_WIRE) @[array.scala 111:21]
     reg f : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h2")) @[array.scala 113:20]
+      reset => (reset, UInt<4>("h4")) @[array.scala 113:20]
     reg fp0 : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h1")) @[array.scala 114:22]
+      reset => (reset, UInt<4>("h4")) @[array.scala 114:22]
     reg fpkm1 : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h3")) @[array.scala 115:24]
+      reset => (reset, UInt<4>("h2")) @[array.scala 115:24]
     wire u : UInt<1> @[array.scala 119:17]
     node _u_T = geq(io.a_in, io.x_new) @[array.scala 120:22]
     node _u_T_1 = mux(_u_T, UInt<1>("h1"), UInt<1>("h0")) @[array.scala 120:13]
@@ -144,10 +144,10 @@ circuit ArrayUnit :
     inst ruu of RankUpdateUnit_1 @[array.scala 103:21]
     ruu.clock <= clock
     ruu.reset <= reset
-    node _T = sub(asSInt(UInt<5>("h2")), asSInt(UInt<5>("h1"))) @[array.scala 108:44]
+    node _T = sub(asSInt(UInt<5>("h4")), asSInt(UInt<5>("h4"))) @[array.scala 108:44]
     node _T_1 = tail(_T, 1) @[array.scala 108:44]
     node _T_2 = asSInt(_T_1) @[array.scala 108:44]
-    node _T_3 = sub(asSInt(UInt<5>("h3")), asSInt(UInt<5>("h2"))) @[array.scala 108:44]
+    node _T_3 = sub(asSInt(UInt<5>("h2")), asSInt(UInt<5>("h4"))) @[array.scala 108:44]
     node _T_4 = tail(_T_3, 1) @[array.scala 108:44]
     node _T_5 = asSInt(_T_4) @[array.scala 108:44]
     wire _df_WIRE : SInt<5>[2] @[array.scala 111:29]
@@ -156,11 +156,11 @@ circuit ArrayUnit :
     reg df : SInt<5>[2], clock with :
       reset => (reset, _df_WIRE) @[array.scala 111:21]
     reg f : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h3")) @[array.scala 113:20]
+      reset => (reset, UInt<4>("h2")) @[array.scala 113:20]
     reg fp0 : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h1")) @[array.scala 114:22]
+      reset => (reset, UInt<4>("h4")) @[array.scala 114:22]
     reg fpkm1 : UInt<4>, clock with :
-      reset => (reset, UInt<4>("h3")) @[array.scala 115:24]
+      reset => (reset, UInt<4>("h2")) @[array.scala 115:24]
     wire u : UInt<1> @[array.scala 119:17]
     node _u_T = geq(io.a_in, io.x_new) @[array.scala 120:22]
     node _u_T_1 = mux(_u_T, UInt<1>("h1"), UInt<1>("h0")) @[array.scala 120:13]
@@ -207,12 +207,12 @@ circuit ArrayUnit :
     a <= io.x_new @[array.scala 46:7]
     node _acc_T = bits(io.u, 0, 0) @[array.scala 52:23]
     node _acc_T_1 = eq(_acc_T, UInt<1>("h0")) @[array.scala 52:27]
-    node _acc_T_2 = mux(_acc_T_1, UInt<4>("h2"), UInt<4>("h0")) @[array.scala 52:18]
+    node _acc_T_2 = mux(_acc_T_1, UInt<4>("h4"), UInt<4>("h0")) @[array.scala 52:18]
     node _acc_T_3 = add(UInt<4>("h0"), _acc_T_2) @[array.scala 52:13]
     node _acc_T_4 = tail(_acc_T_3, 1) @[array.scala 52:13]
     node _acc_T_5 = bits(io.u, 1, 1) @[array.scala 52:23]
     node _acc_T_6 = eq(_acc_T_5, UInt<1>("h0")) @[array.scala 52:27]
-    node _acc_T_7 = mux(_acc_T_6, UInt<4>("h3"), UInt<4>("h0")) @[array.scala 52:18]
+    node _acc_T_7 = mux(_acc_T_6, UInt<4>("h2"), UInt<4>("h0")) @[array.scala 52:18]
     node _acc_T_8 = add(_acc_T_4, _acc_T_7) @[array.scala 52:13]
     node acc = tail(_acc_T_8, 1) @[array.scala 52:13]
     node _r_T = add(UInt<1>("h1"), acc) @[array.scala 54:14]
@@ -236,7 +236,7 @@ circuit ArrayUnit :
     node _rmr_T_4 = asSInt(_rmr_T_3) @[array.scala 64:24]
     rmr <= _rmr_T_4 @[array.scala 64:9]
     node _io_res_T = geq(rmr, asSInt(UInt<1>("h0"))) @[array.scala 65:20]
-    node _io_res_T_1 = lt(rmr, asSInt(UInt<2>("h1"))) @[array.scala 65:34]
+    node _io_res_T_1 = lt(rmr, asSInt(UInt<4>("h4"))) @[array.scala 65:34]
     node _io_res_T_2 = and(_io_res_T, _io_res_T_1) @[array.scala 65:27]
     io.res <= _io_res_T_2 @[array.scala 65:12]
     io.r_out <= r @[array.scala 68:14]

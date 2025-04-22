@@ -158,6 +158,11 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
             c.clock.step()
 
             c.io.y.expect(4.U)
+
+            c.io.x.poke(5.U)
+            c.clock.step()
+
+            c.io.y.expect(4.U)
         }
     }
     "ArrayUnit3" should "pass" in {
@@ -173,6 +178,34 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
             c.clock.step()
 
             c.io.y.expect(2.U)
+        }
+    }
+    "ArrayUnit4" should "pass" in {
+        test(new ArrayUnit(8, 8, 8, 3, Array(1, 2, 3))) { c =>
+            // c.io.R.poke(2.U)
+            c.io.R.poke(4.U)
+
+            c.io.x.poke(1.U)
+            c.clock.step()
+            c.io.x.poke(2.U)
+            c.clock.step()
+            c.io.x.poke(3.U)
+            c.clock.step()
+            c.io.x.poke(4.U)
+            c.clock.step()
+            c.io.x.poke(5.U)
+            c.clock.step()
+            c.io.x.poke(6.U)
+            c.clock.step()
+
+            c.io.x.poke(10.U)
+            c.clock.step()
+            c.io.x.poke(11.U)
+            c.clock.step()
+            c.io.x.poke(4.U)
+            c.clock.step()
+
+            c.io.y.expect(10.U)
         }
     }
     // "ArrayUnit" should "pass" in {

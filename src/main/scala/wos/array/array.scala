@@ -230,6 +230,6 @@ object ArrayUnit extends App {
     val c = 4
     val mr = 4
     val K = 3
-    val weights = Array(1, 2, 3) 
+    val weights = Array(4, 4, 2) 
     emitVerilog(new ArrayUnit(b, c, mr, K, weights), Array("--target-dir", "generated"))
 }

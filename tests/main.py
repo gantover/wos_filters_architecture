@@ -1,59 +1,53 @@
 import cocotb
-from cocotb.triggers import Timer
+from cocotb.triggers import FallingEdge, Timer, RisingEdge
 
+
+import random
+
+# Generate an array of 10 random integers between 1 and 100
+rvs = [random.randint(0, 7) for _ in range(1000)]
+
+weights = [4, 4, 2]
+
+rank = 3
+
+async def clock_step(dut, cycles=1):
+    """Simulate clock steps."""
+    for _ in range(cycles):
+        dut.clock.value = 0
+        await Timer(5, units="ns")  # Half clock period
+        dut.clock.value = 1
+        await Timer(5, units="ns")  # Half clock period
 
 @cocotb.test()
 async def my_first_test(dut):
-    """Try accessing the design."""
+
+    # await cocotb.start(generate_clock(dut))  # run the clock "in the background"
     
-    dut.io_R.value = 4
+    await clock_step(dut)
 
-    dut.io_x.value = 1
+    dut.reset.value = 1
 
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
+    await clock_step(dut)
+    
+    dut.reset.value = 0
+    
+    await clock_step(dut)
 
-    dut.io_x.value = 2
+    dut.io_R.value = rank
 
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
+    await clock_step(dut)
 
-    dut.io_x.value = 3
+    for i in range(len(rvs)):
 
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
+        dut.io_x.value = rvs[i]
+        await clock_step(dut)
 
-    dut._log.info("y %s", dut.io_y.value)
-    # assert dut.my_signal_2.value[0] == 0, "my_signal_2[0] is not 0!"
-    assert dut.io_y.value == 2, "io_y is not 2!"
-
-    dut.io_R.value = 3
-
-    dut.io_x.value = 1
-
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
-
-    dut.io_x.value = 2
-
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
-
-    dut.io_x.value = 3
-
-    dut.clock.value = 0
-    await Timer(1, units="ns")
-    dut.clock.value = 1
-    await Timer(1, units="ns")
-
-    assert dut.io_y.value == 1, "io_y is not 2!"
+        if i > 1:
+            window = rvs[i-2:i+1]
+            window.reverse()
+            extended_window = [[window[j] for _ in range(w)] for j, w in enumerate(weights)]
+            flat_extended_window = [item for sublist in extended_window for item in sublist]
+            flat_extended_window.sort()
+            true_y = flat_extended_window[rank-1]
+            assert dut.io_y.value == true_y, f"Expected {true_y}, but got {dut.io_y.value} for x = {rvs[i]} with {flat_extended_window}"
