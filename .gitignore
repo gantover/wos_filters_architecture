@@ -7,7 +7,9 @@ wos_filters.hw/
 wos_filters.sim/
 wos_filters.runs/
 wos_filters.ip_user_files/
+wos_filters.srcs/utils_1/
 .vscode/
 tests/sim_build/
 tests/results.xml
 __pycache__/
+generated/*

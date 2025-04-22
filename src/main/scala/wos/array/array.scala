@@ -19,15 +19,13 @@ class RankUpdateUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
     val Df = io.df.zipWithIndex.foldLeft(0.S(b.W)) { case (sum, (df_i, i)) =>
         sum + Mux(io.s(i) === 1.U, df_i, 0.S)
     }
-    // io.s(0) is the LSB of s, it should contain v, the comparison with xold
-    // printf(p"r_old ${io.r_old} + t0 ${Mux(io.u === 1.U, io.fp0, 0.U)} - t1 ${Mux(io.s(K-1) === 1.U, io.fpkm1, 0.U)} + Df ${Df}\n")
+    // io.s(K-1) is the MSB of s, it should contain v, the comparison with xold
     io.r_new := ((io.r_old + Mux(io.u === 1.U, io.fp0, 0.U) - Mux(io.s(K-1) === 1.U, io.fpkm1, 0.U)).asSInt + Df).asUInt
 }
 
 class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Array[Int]) extends Module {
     val io = IO(new Bundle {
         val x_new = Input(UInt(b.W)) // where the new sample arrives
-        val x_old = Input(UInt(b.W)) // the previous sample
         val R = Input(UInt(mr.W)) // the desired rank
         val u = Input(UInt((K-1).W)) // the comparision with the new sample from P(1) to P(K-1)
 
@@ -48,7 +46,6 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: A
     // Step 2.2 : compute the rank of x_new
     // Here we start at weights(1) because of .tail but u is offset by 1 so it matches : u(0) <-> weights(1)
     val acc = weights.tail.zipWithIndex.foldLeft(0.U(mr.W)) { case (sum, (weight, i)) =>
-        // printf(p"acc at P(0) start ${i}\n")
         sum + Mux(io.u(i) === 0.U, weight.U(mr.W), 0.U(mr.W))
     }
     r := 1.U + acc
@@ -106,7 +103,6 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     val diffs = Array.fill(K-1)(0.S((c+1).W)) // Use Array for mutability
     for (i <- 0 until K-1) { // until does not include the last element
         diffs(i) = weights(i+1).S((c+1).W) - weights(i).S((c+1).W)
-        // printf(p"diffs($i): ${diffs(i)}\n")
     }
     val df = RegInit(VecInit(diffs)) // Convert the mutable Array to a Vec
 
@@ -161,21 +157,11 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
 
     p_0.io.x_new := io.x
     p_0.io.R := io.R
-    // printf(p"p_0.io.x_new: ${p_0.io.x_new}\n")
-    // printf(p"p_0.io.r: ${p_0.io.r_out}\n")
-    // printf(p"p_0.io.s: ${p_0.io.s_out}\n")
-    // printf(p"p_0.io.res: ${p_0.io.res}\n")
 
     p_array(0).io.x_new := io.x 
     p_array(0).io.r_in := p_0.io.r_out
     p_array(0).io.s_in := p_0.io.s_out
     p_array(0).io.a_in := p_0.io.a_out
-    // printf(p"p_array(1).io.a_in: ${p_array(0).io.a_in}\n")
-    // printf(p"p_array(1).io.r_in: ${p_array(0).io.r_in}\n")
-    // printf(p"p_array(1).io.r_out: ${p_array(0).io.r_out}\n")
-    // printf("s_in: %b\n", p_array(0).io.s_in.asUInt)
-    // printf(p"p_array(1).io.u: ${p_array(0).io.u}\n")
-    // printf(p"p_array(1).io.res: ${p_array(0).io.res}\n")
     p_array(0).io.R := io.R 
 
     for (i <- 0 until K-2) {
@@ -183,17 +169,8 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
         p_array(i+1).io.a_in := p_array(i).io.a_out
         p_array(i+1).io.s_in := p_array(i).io.s_out
         p_array(i+1).io.r_in := p_array(i).io.r_out
-        // printf(p"p_array(${i+2}).io.a_in: ${p_array(i+1).io.a_in}\n")
-        // printf(p"p_array(${i+2}).io.s_in: ${p_array(i+1).io.s_in}\n")
-        // printf("s_in: %b\n", p_array(i+1).io.s_in.asUInt)
-        // printf(p"p_array(${i+2}).io.r_in: ${p_array(i+1).io.r_in}\n")
-        // printf(p"p_array(${i+2}).io.r_out: ${p_array(i+1).io.r_out}\n")
-        // printf(p"p_array(${i+2}).io.u: ${p_array(i+1).io.u}\n")
-        // printf(p"p_array(${i+2}).io.res: ${p_array(i+1).io.res}\n")
         p_array(i+1).io.R := io.R
     } // goes up to the last processor, we don't need the state r,s,a of the last one to be transferred
-
-    p_0.io.x_old := p_array(K-2).io.a_out
 
     // sharing u with P(0)
     val u = Wire(UInt((K-1).W))
@@ -201,10 +178,6 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     // so LSB u(0) should be the value of the first processor
     u := Cat(p_array.map(_.io.u).reverse) // we need to reverse the order of the bits
     p_0.io.u := u
-
-    // printf u in binary
-    printf("u: %b\n", u.asUInt)
-
 
 
     // Output logic
@@ -225,6 +198,24 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Ar
     }
 }
 
+class ArrayContainer(val b: Int, val c: Int, val mr: Int, val K: Int, val weights: Array[Int]) extends Module {
+    val arrayUnit = Module(new ArrayUnit(b, c, mr, K, weights))
+    val io = IO(new Bundle {
+        val x = Input(UInt(b.W))
+        val y = Output(UInt(b.W))
+        val R = Input(UInt(mr.W))
+    })
+    
+    val x = RegInit(0.U(b.W))
+    val y = RegInit(0.U(b.W))
+
+    x := io.x
+    arrayUnit.io.x := x
+    arrayUnit.io.R := io.R
+    y := arrayUnit.io.y
+    io.y := y
+}
+
 object ArrayUnit extends App {
     val b = 4
     val c = 4
@@ -232,4 +223,13 @@ object ArrayUnit extends App {
     val K = 3
     val weights = Array(4, 4, 2) 
     emitVerilog(new ArrayUnit(b, c, mr, K, weights), Array("--target-dir", "generated"))
+}
+
+object ArrayContainer extends App {
+    val b = 4
+    val c = 4
+    val mr = 4
+    val K = 3
+    val weights = Array(4, 4, 2) 
+    emitVerilog(new ArrayContainer(b, c, mr, K, weights), Array("--target-dir", "generated"))
 }
