@@ -5,9 +5,11 @@ from cocotb.triggers import FallingEdge, Timer, RisingEdge
 import random
 
 # Generate an array of 10 random integers between 1 and 100
-rvs = [random.randint(0, 7) for _ in range(1000)]
+rvs = [random.randint(0, 7) for _ in range(10000)]
 
-weights = [4, 4, 2]
+K = 3
+
+weights = [random.randint(1, 5) for _ in range(K)]
 
 rank = 3
 
@@ -35,6 +37,9 @@ async def my_first_test(dut):
     await clock_step(dut)
 
     dut.io_R.value = rank
+
+    for i in range(len(weights)):
+        getattr(dut, f"io_weights_{i}").value = weights[i]
 
     await clock_step(dut)
 

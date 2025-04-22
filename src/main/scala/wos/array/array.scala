@@ -226,6 +226,7 @@ class ArrayContainer(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
     x := io.x
     arrayUnit.io.x := x
     arrayUnit.io.R := io.R
+    arrayUnit.io.weights := io.weights
     y := arrayUnit.io.y
     io.y := y
 }
