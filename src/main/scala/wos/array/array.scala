@@ -77,6 +77,7 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
     val io = IO(new Bundle {
         val R = Input(UInt(mr.W)) // the desired rank
         val weights = Input(Vec(K, UInt(c.W)))
+        val df = Input(Vec(K-1, SInt((c+1).W))) // differences in weights of adjacent samples
 
         // from P(...-1)
         val x_new = Input(UInt(b.W)) // where the new sample arrives
@@ -105,12 +106,6 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
     val ruu = Module(new RankUpdateUnit(b, c, mr, K))
 
     // Setup weights
-    val diffs = Array.fill(K-1)(0.S((c+1).W)) // Use Array for mutability
-    for (i <- 0 until K-1) { // until does not include the last element
-        diffs(i) = io.weights(i+1).asSInt - io.weights(i).asSInt
-    }
-    val df = RegInit(VecInit(diffs)) // Convert the mutable Array to a Vec
-    df := VecInit(diffs)
 
     val f = RegInit(io.weights(id)) // the weight of the sample, constant 
     val fp0 = RegInit(io.weights(0)) // weight of sample at P(0), constant
@@ -130,7 +125,7 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
     ruu.io.u := u // freshly computed
 
     // sharing the constants
-    ruu.io.df := df
+    ruu.io.df := io.df
     ruu.io.fp0 := fp0
     ruu.io.fpkm1 := fpkm1
 
@@ -162,6 +157,14 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
         val weights = Input(Vec(K, UInt(c.W))) // 0 will be the weight of P(0)
     })
 
+    // setting up df
+    val diffs = Array.fill(K-1)(0.S((c+1).W)) // Use Array for mutability
+    for (i <- 0 until K-1) { // until does not include the last element
+        diffs(i) = io.weights(i+1).asSInt - io.weights(i).asSInt
+    }
+    val df = RegInit(VecInit(diffs)) // Convert the mutable Array to a Vec
+    df := VecInit(diffs)
+
     val p_array = Array.tabulate(K-1)(i => Module(new Processor(b, c, mr, K, i+1))) // length is K-1
     val p_0 = Module(new Processor0(b, c, mr, K))
 
@@ -175,6 +178,7 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
     p_array(0).io.a_in := p_0.io.a_out
     p_array(0).io.R := io.R 
     p_array(0).io.weights := io.weights
+    p_array(0).io.df := df
 
     for (i <- 0 until K-2) {
         p_array(i+1).io.x_new := io.x 
@@ -183,6 +187,7 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
         p_array(i+1).io.r_in := p_array(i).io.r_out
         p_array(i+1).io.R := io.R
         p_array(i+1).io.weights := io.weights
+        p_array(i+1).io.df := df
     } // goes up to the last processor, we don't need the state r,s,a of the last one to be transferred
 
     // sharing u with P(0)
@@ -191,7 +196,6 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
     // so LSB u(0) should be the value of the first processor
     u := Cat(p_array.map(_.io.u).reverse) // we need to reverse the order of the bits
     p_0.io.u := u
-
 
     // Output logic
     // There should only be one processor with the right rank
@@ -232,11 +236,10 @@ class ArrayContainer(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
 }
 
 object ArrayUnit extends App {
-    val b = 4
-    val c = 4
-    val mr = 4
-    val K = 3
-    // val weights = Array(4, 4, 2) 
+    val b = sys.env.getOrElse("B", "4").toInt
+    val c = sys.env.getOrElse("C", "4").toInt
+    val mr = sys.env.getOrElse("MR", "4").toInt
+    val K = sys.env.getOrElse("K", "3").toInt
     emitVerilog(new ArrayUnit(b, c, mr, K), Array("--target-dir", "generated"))
 }
 
@@ -245,7 +248,5 @@ object ArrayContainer extends App {
     val c = sys.env.getOrElse("C", "4").toInt
     val mr = sys.env.getOrElse("MR", "4").toInt
     val K = sys.env.getOrElse("K", "3").toInt
-
-    // val weights = Array(4, 4, 2) 
     emitVerilog(new ArrayContainer(b, c, mr, K), Array("--target-dir", "generated"))
 }

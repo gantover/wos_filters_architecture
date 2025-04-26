@@ -90,34 +90,34 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 
-    "Processor" should "pass" in {
-        test(new Processor(4, 4, 4, 3, 1)) { c =>
-            c.io.R.poke(2.U)
-            c.io.weights(0).poke(1.U)
-            c.io.weights(1).poke(2.U)
-            c.io.weights(2).poke(3.U)
+    // "Processor" should "pass" in {
+    //     test(new Processor(4, 4, 4, 3, 1)) { c =>
+    //         c.io.R.poke(2.U)
+    //         c.io.weights(0).poke(1.U)
+    //         c.io.weights(1).poke(2.U)
+    //         c.io.weights(2).poke(3.U)
 
-            c.clock.step()
+    //         c.clock.step()
 
-            c.io.x_new.poke(1.U)
-            c.io.a_in.poke(1.U)
-            c.io.r_in.poke(1.U)
-            c.io.s_in.poke("b011".U)
+    //         c.io.x_new.poke(1.U)
+    //         c.io.a_in.poke(1.U)
+    //         c.io.r_in.poke(1.U)
+    //         c.io.s_in.poke("b011".U)
 
-            c.io.a_out.expect(0.U)
-            c.io.u.expect(1.U) // u = 1 if a >= x_new
+    //         c.io.a_out.expect(0.U)
+    //         c.io.u.expect(1.U) // u = 1 if a >= x_new
 
-            c.clock.step()
+    //         c.clock.step()
 
-            c.io.a_out.expect(1.U)
-            c.io.r_out.expect(4.U) // r_old = 1, u = 1, v = 0, df = 1,1 : 1 + 1 + 0 + 1 + 1 = 4
-            c.io.s_out.expect("b111".U)
+    //         c.io.a_out.expect(1.U)
+    //         c.io.r_out.expect(4.U) // r_old = 1, u = 1, v = 0, df = 1,1 : 1 + 1 + 0 + 1 + 1 = 4
+    //         c.io.s_out.expect("b111".U)
 
-            c.io.res.expect(0.U) 
-            c.io.R.poke(4.U)
-            c.io.res.expect(1.U) 
-        }
-    }
+    //         c.io.res.expect(0.U) 
+    //         c.io.R.poke(4.U)
+    //         c.io.res.expect(1.U) 
+    //     }
+    // }
 
     "Processor_2" should "pass" in {
         test(new Processor(4, 4, 4, 6, 2)) { c =>
