@@ -10,8 +10,9 @@ rvs = [random.randint(0, 7) for _ in range(10000)]
 K = 3
 
 weights = [random.randint(1, 5) for _ in range(K)]
+# weights = [1, 2, 3]
 
-rank = 3
+rank = 4
 
 async def clock_step(dut, cycles=1):
     """Simulate clock steps."""

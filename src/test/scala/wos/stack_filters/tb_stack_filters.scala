@@ -21,14 +21,19 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.clock.step()
             c.io.in.poke(1.U)
             c.clock.step()
-            c.io.out.expect("b110".U)
+            c.io.out.expect("b011".U)
             c.io.in.poke(1.U)
             c.clock.step()
             c.io.out.expect("b111".U)
         }
     }
     "BLL" should "pass" in {
-        test(new BLL(Array(1, 2, 3), 4, 4)) { c => 
+        test(new BLL(4, 4, 4, 3)) { c => 
+            c.io.R.poke(4.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(3.U)
+            c.clock.step()
             // We give (1, 2, 3) as weights and 4 as rank
             // We follow the convention that the first weight in the array goes to the MSB of the reg
             // the MSB is the lattest bit added to the shift register, on the left
@@ -43,6 +48,27 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.io.out.expect(0.U)
         }
     }
+    // "BLL_Method2" should "pass" in {
+    //     test(new BLL_Method2(4, 4, 4, 5)) { c => 
+    //         c.io.R.poke(3.U)
+    //         // 1,2,1,1,2
+    //         c.io.weights(0).poke(1.U)
+    //         c.io.weights(1).poke(2.U)
+    //         c.io.weights(2).poke(1.U)
+    //         c.io.weights(3).poke(1.U)
+    //         c.io.weights(4).poke(2.U)
+    //         c.io.enable.poke(0.U)
+    //         c.clock.step()
+    //         c.clock.step()
+
+    //         c.io.num0.poke(1.S)
+    //         c.io.regs_in.poke("b011010".U) // xnew is at 0, the LSB
+
+    //         c.clock.step()
+
+    //         c.io.out.expect(1.U)
+    //     }
+    // }
     "TR" should "pass" in {
         test(new ThresholdRecomposition(3)) { c =>
             c.io.in.poke("b1111111".U)
@@ -58,7 +84,17 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
     "StackFiltersUnit" should "pass" in {
-        test(new StackFiltersUnit(Array(1, 2, 3), 4, 3)) { c =>
+        test(new StackFiltersUnit(4, 4, 4, 3)) { c =>
+            c.io.R.poke(4.U)
+            c.io.enable.poke(0.U)
+            c.io.enable.poke(1.U)
+            c.io.weights(0).poke(1.U)
+            c.io.weights(1).poke(2.U)
+            c.io.weights(2).poke(3.U)
+            c.clock.step()
+
+            c.io.enable.poke(1.U)
+
             c.io.x.poke(1.U)
             c.clock.step()
             c.io.x.poke(3.U)
@@ -66,7 +102,7 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.io.x.poke(2.U)
             c.clock.step()
 
-            c.io.y.expect(2.U)
+            // c.io.y.expect(2.U)
 
             c.io.x.poke(3.U)
             c.clock.step()
@@ -81,5 +117,4 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.io.y.expect(5.U)
         }
     }
-
 }

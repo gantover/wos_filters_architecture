@@ -241,10 +241,11 @@ object ArrayUnit extends App {
 }
 
 object ArrayContainer extends App {
-    val b = 4
-    val c = 4
-    val mr = 4
-    val K = 3
+    val b = sys.env.getOrElse("B", "4").toInt
+    val c = sys.env.getOrElse("C", "4").toInt
+    val mr = sys.env.getOrElse("MR", "4").toInt
+    val K = sys.env.getOrElse("K", "3").toInt
+
     // val weights = Array(4, 4, 2) 
     emitVerilog(new ArrayContainer(b, c, mr, K), Array("--target-dir", "generated"))
 }

@@ -1,0 +1,51 @@
+Copyright 1986-2022 Xilinx, Inc. All Rights Reserved. Copyright 2022-2024 Advanced Micro Devices, Inc. All Rights Reserved.
+---------------------------------------------------------------------------------------------------------------------------------------------
+| Tool Version : Vivado v.2024.2 (lin64) Build 5239630 Fri Nov 08 22:34:34 MST 2024
+| Date         : Tue Apr 22 23:37:27 2025
+| Host         : archlinux running 64-bit unknown
+| Command      : report_utilization -hierarchical -cells [get_cells arrayUnit] -file ../reports/u_arrayUnit_b8_c8_mr8_k8_.csv
+| Design       : ArrayContainer
+| Device       : xc7a35tcpg236-1
+| Speed File   : -1
+| Design State : Synthesized
+---------------------------------------------------------------------------------------------------------------------------------------------
+
+Utilization Design Information
+
+Table of Contents
+-----------------
+1. Utilization by Hierarchy
+
+1. Utilization by Hierarchy
+---------------------------
+
++---------------------+------------------+------------+------------+---------+------+-----+--------+--------+------------+
+|       Instance      |      Module      | Total LUTs | Logic LUTs | LUTRAMs | SRLs | FFs | RAMB36 | RAMB18 | DSP Blocks |
++---------------------+------------------+------------+------------+---------+------+-----+--------+--------+------------+
+| arrayUnit           |        ArrayUnit |       1057 |       1057 |       0 |    0 | 549 |      0 |      0 |          0 |
+|   arrayUnit         |        ArrayUnit |       1057 |       1057 |       0 |    0 | 549 |      0 |      0 |          0 |
+|     Processor       |        Processor |        141 |        141 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       (Processor)   |        Processor |        101 |        101 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_5 |         40 |         40 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_1     |      Processor_1 |        155 |        155 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       (Processor_1) |      Processor_1 |        124 |        124 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_4 |         31 |         31 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_2     |      Processor_2 |        143 |        143 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       (Processor_2) |      Processor_2 |        109 |        109 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_3 |         34 |         34 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_3     |      Processor_3 |        138 |        138 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       (Processor_3) |      Processor_3 |        104 |        104 |       0 |    0 |  73 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_2 |         34 |         34 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_4     |      Processor_4 |        136 |        136 |       0 |    0 |  75 |      0 |      0 |          0 |
+|       (Processor_4) |      Processor_4 |        108 |        108 |       0 |    0 |  75 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_1 |         28 |         28 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_5     |      Processor_5 |        155 |        155 |       0 |    0 |  79 |      0 |      0 |          0 |
+|       (Processor_5) |      Processor_5 |        108 |        108 |       0 |    0 |  79 |      0 |      0 |          0 |
+|       ruu           | RankUpdateUnit_0 |         47 |         47 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     Processor_6     |      Processor_6 |        112 |        112 |       0 |    0 |  80 |      0 |      0 |          0 |
+|       (Processor_6) |      Processor_6 |         76 |         76 |       0 |    0 |  80 |      0 |      0 |          0 |
+|       ruu           |   RankUpdateUnit |         36 |         36 |       0 |    0 |   0 |      0 |      0 |          0 |
+|     p_0             |       Processor0 |         77 |         77 |       0 |    0 |  23 |      0 |      0 |          0 |
++---------------------+------------------+------------+------------+---------+------+-----+--------+--------+------------+
+
+
