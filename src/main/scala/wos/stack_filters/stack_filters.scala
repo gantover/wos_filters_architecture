@@ -22,12 +22,6 @@ class Regs(val K: Int) extends Module {
 
     val regs = RegInit(Fill(K, 1.U(1.W)))
 
-    // val regs = RegInit(0.U(K.W))
-
-    // regs := regs << 1.U ## io.in
-    // regs := Cat(regs(depth-2, 0), io.in)
-
-    // regs := Cat(io.in, regs(K-1, 1)) // ->in$$-> MSB contains the new value
     regs := Cat(regs(K-2, 0), io.in) // <-in<- LSB contains the new value
     io.out := regs
 }
@@ -39,41 +33,25 @@ class BLL(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
         val R = Input(UInt(mr.W))
         val weights = Input(Vec(K, UInt(c.W)))
     })
-    // val acc = Wire(UInt(mr.W)) // will accumulate weights so c.W
-    // acc := 0.U
-    // for (i <- 0 until depth) { // until does not include the last element
-    //     acc := acc + Mux(io.regs_in(i) === 1.U, weights(i).U(width.W), 0.U(width.W))
-    // }
-    // acc := weights.zipWithIndex.foldLeft(0.U(b.W)) { case (sum, (weight, i)) =>
-    //     sum + Mux(io.regs_in(K-1-i) === 0.U, weight.U(b.W), 0.U(b.W))
-    // }
-
-    // val acc = (0 until io.weights.length).foldLeft(0.U(mr.W)) { (sum, i) =>
-    //     sum + Mux(io.regs_in(K-1-i) === 0.U, io.weights(i), 0.U(mr.W))
-    // }
-    // val acc = (0 until io.weights.length).foldLeft(0.U(mr.W)) { (sum, i) =>
-    //     sum + Mux(io.regs_in(i) === 0.U, io.weights(i), 0.U(mr.W))
-    // }
     val acc = (0 until io.weights.length).foldLeft((-io.R.asSInt).pad(mr + 1)) { (sum, i) =>
         sum + Mux(io.regs_in(i) === 0.U, io.weights(i).asSInt, 0.S)
     }
-    // io.out := (acc < io.R).asUInt
     io.out := (acc < 0.S).asUInt
 }
 
 class BLL_Method2(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
+    // failed to implement correctly, won't be used
     val io = IO(new Bundle {
         val regs_in = Input(UInt((K+1).W))
         val out = Output(UInt(1.W))
         val R = Input(UInt(mr.W))
         val weights = Input(Vec(K, UInt(c.W)))
         val enable = Input(UInt(1.W))
-        // val num0 = Input(SInt((mr+1).W))
     })
 
     // TODO, move that out
-    val diffs = Array.fill(K-1)(0.S((mr+1).W)) // Use Array for mutability
-    for (i <- 0 until K-1) { // until does not include the last element
+    val diffs = Array.fill(K-1)(0.S((mr+1).W)) 
+    for (i <- 0 until K-1) { 
         diffs(i) = io.weights(i+1).asSInt - io.weights(i).asSInt
     }
 
@@ -86,12 +64,8 @@ class BLL_Method2(val b: Int, val c: Int, val mr: Int, val K: Int) extends Modul
     }
 
     val num0 = RegInit(0.S((mr+1).W))
-    // printf(p"num0: ${num0}\n")
-    // printf(p"io.R: ${io.R}\n")
     val new_num0 = Wire(SInt((mr+1).W))
     new_num0 := num0 + Mux(io.regs_in(0) === 0.U, io.weights(0).asSInt, 0.S) - Mux(io.regs_in(K) === 0.U, io.weights(K-1).asSInt, 0.S) + Df
-    // printf("regs_in : %b\n", io.regs_in)
-    // printf(p"new_num0: ${new_num0}\n")
 
     when (io.enable === 1.U) {
         num0 := new_num0
@@ -122,12 +96,11 @@ class StackFiltersUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends 
         val y = Output(UInt(b.W))
         val R = Input(UInt(mr.W))
         val weights = Input(Vec(K, UInt(c.W)))
-        val enable = Input(UInt(1.W))
     })
 
     val tdu = Module(new ThresholdDecomposition(b))
-    val regs_array = Array.fill(exp_dim)(Module(new Regs((K+1))))
-    val bll_array = Array.fill(exp_dim)(Module(new BLL_Method2(b, c, mr, K)))
+    val regs_array = Array.fill(exp_dim)(Module(new Regs(K)))
+    val bll_array = Array.fill(exp_dim)(Module(new BLL(b, c, mr, K)))
     val tru = Module(new ThresholdRecomposition(b))
     tdu.io.x := io.x
     for (i <- 0 until exp_dim) {
@@ -135,16 +108,8 @@ class StackFiltersUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends 
         bll_array(i).io.regs_in := regs_array(i).io.out
         bll_array(i).io.R := io.R
         bll_array(i).io.weights := io.weights
-        bll_array(i).io.enable := io.enable
     }
     val bll_outputs = Cat(bll_array.map(_.io.out).reverse)
-    // for (i <- 0 until exp_dim) {
-    //     printf(p"regs_array($i).io.in: ${regs_array(i).io.in}\n")
-    //     printf(p"regs_array($i).io.out: ${regs_array(i).io.out}\n")
-    //     printf(p"bll_array($i).io.regs_in: ${bll_array(i).io.regs_in}\n")
-    //     printf(p"bll_array($i).io.out: ${bll_array(i).io.out}\n")
-    // }
-    // printf("bll_outputs: %b\n", bll_outputs)
     tru.io.in := bll_outputs
     io.y := tru.io.out
 }
@@ -170,10 +135,10 @@ class StackFiltersContainer(val b: Int, val c: Int, val mr: Int, val K: Int) ext
 }
 
 object StackFiltersUnit extends App {
-    val b = 4
-    val c = 4
-    val mr = 4
-    val K = 3
+    val b = sys.env.getOrElse("B", "4").toInt
+    val c = sys.env.getOrElse("C", "4").toInt
+    val mr = sys.env.getOrElse("MR", "4").toInt
+    val K = sys.env.getOrElse("K", "3").toInt
     emitVerilog(new StackFiltersUnit(b, c, mr, K), Array("--target-dir", "generated"))
 }
 

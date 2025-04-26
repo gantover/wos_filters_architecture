@@ -86,14 +86,10 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
     "StackFiltersUnit" should "pass" in {
         test(new StackFiltersUnit(4, 4, 4, 3)) { c =>
             c.io.R.poke(4.U)
-            c.io.enable.poke(0.U)
-            c.io.enable.poke(1.U)
             c.io.weights(0).poke(1.U)
             c.io.weights(1).poke(2.U)
             c.io.weights(2).poke(3.U)
             c.clock.step()
-
-            c.io.enable.poke(1.U)
 
             c.io.x.poke(1.U)
             c.clock.step()
@@ -102,7 +98,7 @@ class tb_stack_filters extends AnyFlatSpec with ChiselScalatestTester {
             c.io.x.poke(2.U)
             c.clock.step()
 
-            // c.io.y.expect(2.U)
+            c.io.y.expect(2.U)
 
             c.io.x.poke(3.U)
             c.clock.step()
