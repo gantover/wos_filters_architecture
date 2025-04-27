@@ -16,11 +16,10 @@ class RankUpdateUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
         val r_new = Output(UInt(mr.W))
     })
 
-    val Df = io.df.zipWithIndex.foldLeft(0.S(b.W)) { case (sum, (df_i, i)) =>
-        sum + Mux(io.s(i) === 1.U, df_i, 0.S)
+    val Df = (0 until K-1).foldLeft(0.S((mr+1).W)) { (sum , i) =>
+        sum + Mux(io.s(i) === 1.U, io.df(i), 0.S((mr+1).W))
     }
-    // io.s(K-1) is the MSB of s, it should contain v, the comparison with xold
-    io.r_new := ((io.r_old + Mux(io.u === 1.U, io.fp0, 0.U) - Mux(io.s(K-1) === 1.U, io.fpkm1, 0.U)).asSInt + Df).asUInt
+    io.r_new := (io.r_old.asSInt + Mux(io.u === 1.U, io.fp0.asSInt, 0.S) + Mux(io.s(K-1) === 1.U, -io.fpkm1.asSInt, 0.S)+ Df ).asUInt
 }
 
 class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
@@ -34,7 +33,7 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module
         val s_out = Output(UInt(K.W))
         val a_out = Output(UInt(b.W))
 
-        val res = Output(UInt(1.W))
+        val res = Output(UInt(b.W))
     })
 
 
@@ -46,34 +45,28 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module
 
     // Step 2.2 : compute the rank of x_new
     // Here we start at weights(1) because of .tail but u is offset by 1 so it matches : u(0) <-> weights(1)
-    // val acc = weights.tail.zipWithIndex.foldLeft(0.U(mr.W)) { case (sum, (weight, i)) =>
-        // sum + Mux(io.u(i) === 0.U, weight.U(mr.W), 0.U(mr.W))
-    // } 
     val acc = (1 until io.weights.length).foldLeft(0.U(mr.W)) { (sum, i) =>
         sum + Mux(io.u(i - 1) === 0.U, io.weights(i), 0.U)
     }
     r := 1.U + acc
 
     // Step 2.3 : Update comparison with other samples
-    val s_new = VecInit((0 until K-1).map(j => !io.u(j)))
-    // s := 1.U(1.W) ## s_new.asUInt
-    // s := (io.x_new >= io.x_old).asUInt ## s_new.asUInt
-    s := s_new.asUInt ## 0.U(1.W)
+    val s_new = Cat(VecInit((0 until K-1).map(j => !io.u(j))).asUInt, 0.U(1.W))
+    s := s_new
 
     // step 3 : match rank
     val rmr = Wire(SInt((c+1).W))
     rmr := io.R.asSInt - r.asSInt 
-    io.res := (rmr >= 0.S && rmr < io.weights(0).asSInt).asUInt
-    // res will come out at the next clock cycle
+    val cond = Wire(UInt(1.W))
+    cond := (rmr >= 0.S && rmr < io.weights(0).asSInt).asUInt
+    io.res := Mux(cond === 1.U, a, 0.U)
 
     io.r_out := r
-    io.s_out := s
+    io.s_out := s 
     io.a_out := a
 }
 
 class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) extends Module {
-    // val max_rank = weights.sum
-    // val mr = math.ceil(math.log10(max_rank + 1) / math.log10(2)).toInt
     val io = IO(new Bundle {
         val R = Input(UInt(mr.W)) // the desired rank
         val weights = Input(Vec(K, UInt(c.W)))
@@ -94,10 +87,10 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
         val u = Output(UInt(1.W))
 
         // to output logic
-        val res = Output(UInt(1.W))
+        val res = Output(UInt(b.W))
     })
 
-    val r = RegInit(0.U(b.W)) // the weighted rank of the sample
+    val r = RegInit(0.U(mr.W)) // the weighted rank of the sample, mistake : b -> mr
     val s = RegInit(0.U(K.W)) // store the comparaison result with all samples that arrived before it
     val a = RegInit(0.U(b.W)) // holds the samples
     
@@ -107,9 +100,9 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
 
     // Setup weights
 
-    val f = RegInit(io.weights(id)) // the weight of the sample, constant 
-    val fp0 = RegInit(io.weights(0)) // weight of sample at P(0), constant
-    val fpkm1 = RegInit(io.weights(K-1)) // weight of sample at P(K-1), constant
+    val f = Wire(UInt(c.W)) 
+    val fp0 = Wire(UInt(c.W)) 
+    val fpkm1 = Wire(UInt(c.W)) 
     f := io.weights(id)
     fp0 := io.weights(0)
     fpkm1 := io.weights(K-1)
@@ -135,14 +128,14 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
     r := ruu.io.r_new
 
     // step 2.3 : update comparison with other samples
-    // s := Cat(u, io.s_in(K-1, 1)) // we discard the lsb shift everything and add the new sample to the msb
     s := Cat(io.s_in(K-2, 0), u) // discard msb and shifts everything 
 
     // step 3 : match rank
-    val rmr = Wire(SInt((c+1).W))
+    val rmr = Wire(SInt((mr+1).W)) // mistake : c+1 -> mr+1
     rmr := io.R.asSInt - r.asSInt 
-    io.res := (rmr >= 0.S && rmr < f.asSInt).asUInt
-    // as of right now, we need to wait a clock cycle to get the result
+    val cond = Wire(UInt(1.W))
+    cond := (rmr >= 0.S && rmr < f.asSInt).asUInt
+    io.res := Mux(cond === 1.U, a, 0.U)
 
     io.r_out := r
     io.s_out := s
@@ -162,31 +155,44 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
     for (i <- 0 until K-1) { // until does not include the last element
         diffs(i) = io.weights(i+1).asSInt - io.weights(i).asSInt
     }
-    val df = RegInit(VecInit(diffs)) // Convert the mutable Array to a Vec
+    val df = RegInit(VecInit(Seq.fill(K-1)(0.S((c+1).W)))) 
     df := VecInit(diffs)
 
-    val p_array = Array.tabulate(K-1)(i => Module(new Processor(b, c, mr, K, i+1))) // length is K-1
+    val weights = RegInit(VecInit(Seq.fill(K)(0.U(c.W)))) 
+    weights := io.weights
+
+    val R = RegInit(0.U(mr.W))
+    R := io.R
+
+    val p_array = Array.tabulate(K-1)(i => Module(new Processor(b, c, mr, K, i+1)))
     val p_0 = Module(new Processor0(b, c, mr, K))
 
+    // P(0)
     p_0.io.x_new := io.x
-    p_0.io.R := io.R
-    p_0.io.weights := io.weights
+    p_0.io.R := R
+    p_0.io.weights := weights
 
+    // P(1)
     p_array(0).io.x_new := io.x 
+
     p_array(0).io.r_in := p_0.io.r_out
     p_array(0).io.s_in := p_0.io.s_out
     p_array(0).io.a_in := p_0.io.a_out
-    p_array(0).io.R := io.R 
-    p_array(0).io.weights := io.weights
+
+    p_array(0).io.R := R 
+    p_array(0).io.weights := weights
     p_array(0).io.df := df
 
+    // P(2) to P(K-1)
     for (i <- 0 until K-2) {
         p_array(i+1).io.x_new := io.x 
+
         p_array(i+1).io.a_in := p_array(i).io.a_out
         p_array(i+1).io.s_in := p_array(i).io.s_out
         p_array(i+1).io.r_in := p_array(i).io.r_out
-        p_array(i+1).io.R := io.R
-        p_array(i+1).io.weights := io.weights
+
+        p_array(i+1).io.R := R
+        p_array(i+1).io.weights := weights
         p_array(i+1).io.df := df
     } // goes up to the last processor, we don't need the state r,s,a of the last one to be transferred
 
@@ -199,20 +205,11 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
 
     // Output logic
     // There should only be one processor with the right rank
-    // Default value for io.y
-    io.y := 0.U
+   // Create a Vec to hold all res outputs
+    val resVec = VecInit(p_0.io.res +: p_array.map(_.io.res))
 
-    // Check if p_0 has the right rank
-    when (p_0.io.res === 1.U) {
-        io.y := p_0.io.a_out
-    }.otherwise {
-        // Check each processor in the array
-        for (i <- 0 until K-1) {
-            when (p_array(i).io.res === 1.U) {
-                io.y := p_array(i).io.a_out
-            }
-        }
-    }
+    // Combine all res outputs into a single wire
+    io.y := resVec.reduce(_ | _) 
 }
 
 class ArrayContainer(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
@@ -229,8 +226,10 @@ class ArrayContainer(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
 
     x := io.x
     arrayUnit.io.x := x
+
     arrayUnit.io.R := io.R
     arrayUnit.io.weights := io.weights
+
     y := arrayUnit.io.y
     io.y := y
 }

@@ -9,9 +9,17 @@ wos.sim/
 wos.runs/
 wos.ip_user_files/
 wos.srcs/utils_1/
+stack_filters.cache/
+stack_filters.hw/
+stack_filters.sim/
+stack_filters.runs/
+stack_filters.ip_user_files/
+stack_filters.srcs/utils_1/
+scripts/figures/
 .vscode/
 tests/sim_build/
 tests/results.xml
 __pycache__/
 generated/*
 temp/
+reports/

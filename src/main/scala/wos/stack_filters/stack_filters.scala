@@ -17,7 +17,7 @@ class Regs(val K: Int) extends Module {
     assert(K > 1)
     val io = IO(new Bundle {
         val in = Input(UInt(1.W))
-        val out = Output(UInt(K.W))
+        val out = Output(UInt(K.W)costs)
     })
 
     val regs = RegInit(Fill(K, 1.U(1.W)))
@@ -98,6 +98,12 @@ class StackFiltersUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends 
         val weights = Input(Vec(K, UInt(c.W)))
     })
 
+    val weights = RegInit(VecInit(Seq.fill(K)(0.U(c.W)))) 
+    weights := io.weights
+
+    val R = RegInit(0.U(mr.W))
+    R := io.R
+
     val tdu = Module(new ThresholdDecomposition(b))
     val regs_array = Array.fill(exp_dim)(Module(new Regs(K)))
     val bll_array = Array.fill(exp_dim)(Module(new BLL(b, c, mr, K)))
@@ -106,8 +112,8 @@ class StackFiltersUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends 
     for (i <- 0 until exp_dim) {
         regs_array(i).io.in := tdu.io.out(i)
         bll_array(i).io.regs_in := regs_array(i).io.out
-        bll_array(i).io.R := io.R
-        bll_array(i).io.weights := io.weights
+        bll_array(i).io.R := R
+        bll_array(i).io.weights := weights
     }
     val bll_outputs = Cat(bll_array.map(_.io.out).reverse)
     tru.io.in := bll_outputs
@@ -123,6 +129,9 @@ class StackFiltersContainer(val b: Int, val c: Int, val mr: Int, val K: Int) ext
         val weights = Input(Vec(K, UInt(c.W)))
     })
     val stack_filters_unit = Module(new StackFiltersUnit(b, c, mr, K))
+
+    stack_filters_unit.io.R := io.R
+    stack_filters_unit.io.weights := io.weights
 
     val regx = RegInit(0.U(b.W))
     val regy = RegInit(0.U(b.W))
