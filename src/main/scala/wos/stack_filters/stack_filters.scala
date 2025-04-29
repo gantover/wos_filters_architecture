@@ -2,7 +2,6 @@ package wos.stack_filters
 
 import chisel3._
 import chisel3.util._
-import chisel3.util.experimental.loadMemoryFromFileInline
 
 class ThresholdDecomposition(b: Int) extends Module {
     val out_dim = scala.math.pow(2,b).toInt - 1
@@ -17,7 +16,7 @@ class Regs(val K: Int) extends Module {
     assert(K > 1)
     val io = IO(new Bundle {
         val in = Input(UInt(1.W))
-        val out = Output(UInt(K.W)costs)
+        val out = Output(UInt(K.W))
     })
 
     val regs = RegInit(Fill(K, 1.U(1.W)))
@@ -33,9 +32,16 @@ class BLL(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
         val R = Input(UInt(mr.W))
         val weights = Input(Vec(K, UInt(c.W)))
     })
+    
     val acc = (0 until io.weights.length).foldLeft((-io.R.asSInt).pad(mr + 1)) { (sum, i) =>
         sum + Mux(io.regs_in(i) === 0.U, io.weights(i).asSInt, 0.S)
     }
+
+    // Pipeline stage of the output before the TRU (stack (+1))
+    // val out = RegInit(0.U(1.W))
+    // out := (acc < 0.S).asUInt
+    // io.out := out
+
     io.out := (acc < 0.S).asUInt
 }
 

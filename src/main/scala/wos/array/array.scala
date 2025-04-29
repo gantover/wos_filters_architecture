@@ -2,14 +2,12 @@ package wos.array
 
 import chisel3._
 import chisel3.util._
-import chisel3.util.experimental.loadMemoryFromFileInline
 
 class RankUpdateUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
     val io = IO(new Bundle {
         val s = Input(UInt(K.W))
         val u = Input(UInt(1.W))
-        // df is a vector of size K-1 of the differences in weights of adjacent samples
-        val df = Input(Vec((K-1), SInt((c+1).W))) // not sure about the c + 1, added because of the sign
+        val df = Input(Vec((K-1), SInt((c+1).W)))
         val fp0 = Input(UInt(c.W))
         val fpkm1 = Input(UInt(c.W)) 
         val r_old = Input(UInt(mr.W))
@@ -55,10 +53,10 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module
     s := s_new
 
     // step 3 : match rank
-    val rmr = Wire(SInt((c+1).W))
+    val rmr = Wire(SInt((mr+1).W))
     rmr := io.R.asSInt - r.asSInt 
     val cond = Wire(UInt(1.W))
-    cond := (rmr >= 0.S && rmr < io.weights(0).asSInt).asUInt
+    cond := (rmr >= 0.S && rmr < io.weights(0).zext.asSInt).asUInt
     io.res := Mux(cond === 1.U, a, 0.U)
 
     io.r_out := r
