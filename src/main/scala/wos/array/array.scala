@@ -14,10 +14,10 @@ class RankUpdateUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Mo
         val r_new = Output(UInt(mr.W))
     })
 
-    val Df = (0 until K-1).foldLeft(0.S((mr+1).W)) { (sum , i) =>
-        sum + Mux(io.s(i) === 1.U, io.df(i), 0.S((mr+1).W))
+    val Df = (0 until K-1).foldLeft(0.S((mr).W)) { (sum , i) =>
+        sum + Mux(io.s(i) === 1.U, io.df(i).pad(mr), 0.S(mr.W))
     }
-    io.r_new := (io.r_old.asSInt + Mux(io.u === 1.U, io.fp0.asSInt, 0.S) + Mux(io.s(K-1) === 1.U, -io.fpkm1.asSInt, 0.S)+ Df ).asUInt
+    io.r_new := (io.r_old.asSInt + Mux(io.u === 1.U, Cat(0.U(1.W), io.fp0).asSInt.pad(mr), 0.S) + Mux(io.s(K-1) === 1.U, -Cat(0.U(1.W), io.fpkm1).asSInt.pad(mr), 0.S)+ Df ).asUInt
 }
 
 class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
@@ -44,7 +44,7 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module
     // Step 2.2 : compute the rank of x_new
     // Here we start at weights(1) because of .tail but u is offset by 1 so it matches : u(0) <-> weights(1)
     val acc = (1 until io.weights.length).foldLeft(0.U(mr.W)) { (sum, i) =>
-        sum + Mux(io.u(i - 1) === 0.U, io.weights(i), 0.U)
+        sum + Mux(io.u(i - 1) === 0.U, io.weights(i).pad(mr), 0.U)
     }
     r := 1.U + acc
 
@@ -54,9 +54,9 @@ class Processor0(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module
 
     // step 3 : match rank
     val rmr = Wire(SInt((mr+1).W))
-    rmr := io.R.asSInt - r.asSInt 
+    rmr := io.R.pad(mr+1).asSInt - r.pad(mr+1).asSInt 
     val cond = Wire(UInt(1.W))
-    cond := (rmr >= 0.S && rmr < io.weights(0).zext.asSInt).asUInt
+    cond := (rmr >= 0.S && rmr < io.weights(0).pad(mr+1).asSInt).asUInt
     io.res := Mux(cond === 1.U, a, 0.U)
 
     io.r_out := r
@@ -130,9 +130,9 @@ class Processor(val b: Int, val c: Int, val mr: Int, val K: Int, val id : Int) e
 
     // step 3 : match rank
     val rmr = Wire(SInt((mr+1).W)) // mistake : c+1 -> mr+1
-    rmr := io.R.asSInt - r.asSInt 
+    rmr := io.R.pad(mr+1).asSInt - r.pad(mr+1).asSInt 
     val cond = Wire(UInt(1.W))
-    cond := (rmr >= 0.S && rmr < f.asSInt).asUInt
+    cond := (rmr >= 0.S && rmr < f.pad(mr+1).asSInt).asUInt
     io.res := Mux(cond === 1.U, a, 0.U)
 
     io.r_out := r
@@ -151,7 +151,7 @@ class ArrayUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module 
     // setting up df
     val diffs = Array.fill(K-1)(0.S((c+1).W)) // Use Array for mutability
     for (i <- 0 until K-1) { // until does not include the last element
-        diffs(i) = io.weights(i+1).asSInt - io.weights(i).asSInt
+        diffs(i) = io.weights(i+1).pad(c+1).asSInt - io.weights(i).pad(c+1).asSInt
     }
     val df = RegInit(VecInit(Seq.fill(K-1)(0.S((c+1).W)))) 
     df := VecInit(diffs)

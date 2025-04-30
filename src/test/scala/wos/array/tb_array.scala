@@ -90,35 +90,6 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
         }
     }
 
-    // "Processor" should "pass" in {
-    //     test(new Processor(4, 4, 4, 3, 1)) { c =>
-    //         c.io.R.poke(2.U)
-    //         c.io.weights(0).poke(1.U)
-    //         c.io.weights(1).poke(2.U)
-    //         c.io.weights(2).poke(3.U)
-
-    //         c.clock.step()
-
-    //         c.io.x_new.poke(1.U)
-    //         c.io.a_in.poke(1.U)
-    //         c.io.r_in.poke(1.U)
-    //         c.io.s_in.poke("b011".U)
-
-    //         c.io.a_out.expect(0.U)
-    //         c.io.u.expect(1.U) // u = 1 if a >= x_new
-
-    //         c.clock.step()
-
-    //         c.io.a_out.expect(1.U)
-    //         c.io.r_out.expect(4.U) // r_old = 1, u = 1, v = 0, df = 1,1 : 1 + 1 + 0 + 1 + 1 = 4
-    //         c.io.s_out.expect("b111".U)
-
-    //         c.io.res.expect(0.U) 
-    //         c.io.R.poke(4.U)
-    //         c.io.res.expect(1.U) 
-    //     }
-    // }
-
     "Processor_2" should "pass" in {
         test(new Processor(4, 4, 4, 6, 2)) { c =>
             c.io.R.poke(7.U)
@@ -242,45 +213,4 @@ class tb_array extends AnyFlatSpec with ChiselScalatestTester {
             c.io.y.expect(10.U)
         }
     }
-    // "ArrayUnit" should "pass" in {
-    //     test(new ArrayUnit(4, 4, 4, 6, Array(2, 2, 4, 3, 3, 3))) { c =>
-    //         // c.io.R.poke(2.U)
-    //         c.io.R.poke(7.U)
-
-    //         c.io.x.poke(8.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(5.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(2.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(6.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(3.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(4.U)
-    //         c.clock.step()
-
-    //         c.io.x.poke(1.U)
-    //         c.clock.step()
-
-    //         // c.io.y.expect(1.U)
-    //         // c.io.y.expect(2.U)
-
-    //         c.io.x.poke(0.U)
-    //         c.clock.step()
-    //         // c.io.y.expect(3.U)
-
-    //         c.io.x.poke(0.U)
-    //         c.clock.step()
-    //         // c.io.y.expect(3.U)
-
-    //         c.io.x.poke(0.U)
-    //         c.clock.step()
-    //     }
-    // }
 }

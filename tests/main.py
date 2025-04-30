@@ -9,8 +9,9 @@ import random
 # random.seed(0)
 
 B = int(os.environ.get("B", 3))
-C = int(os.environ.get("B", 3))
-MR = C
+C = int(os.environ.get("C", 3))
+MR = int(os.environ.get("MR", 3))
+# assert MR == C, "MR must be equal to C"
 K = int(os.environ.get("K", 3))
 
 async def clock_step(dut, cycles=1):
@@ -34,10 +35,9 @@ async def my_first_test(dut):
 
     for it in range(10):
         weights = [random.randint(1, 2**C-1) for _ in range(K)]
-        print(log2(sum(weights)))
-        rank = random.randint(1, 5)
+        rank = random.randint(1, 2**C-1)
         print(f"It {it} Weights : {weights} Rank : {rank}")
-        rvs = [random.randint(0, 7) for _ in range(10000)]
+        rvs = [random.randint(0, 2**B-1) for _ in range(10000)]
     
         await clock_step(dut)
 

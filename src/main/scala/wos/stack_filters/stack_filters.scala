@@ -34,7 +34,7 @@ class BLL(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
     })
     
     val acc = (0 until io.weights.length).foldLeft((-io.R.asSInt).pad(mr + 1)) { (sum, i) =>
-        sum + Mux(io.regs_in(i) === 0.U, io.weights(i).asSInt, 0.S)
+        sum + Mux(io.regs_in(i) === 0.U, io.weights(i).pad(mr+1).asSInt, 0.S)
     }
 
     // Pipeline stage of the output before the TRU (stack (+1))
@@ -127,7 +127,7 @@ class StackFiltersUnit(val b: Int, val c: Int, val mr: Int, val K: Int) extends 
 }
 
 class StackFiltersContainer(val b: Int, val c: Int, val mr: Int, val K: Int) extends Module {
-    // Acts as a buffer for input and output so that we can impose a clock constraint for speed measurement
+    // Acts as a buffer for input and output so that we could impose a clock constraint and the select the unit 
     val io = IO(new Bundle {
         val x = Input(UInt(b.W))
         val y = Output(UInt(b.W))
